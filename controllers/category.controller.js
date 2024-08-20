@@ -24,8 +24,38 @@ export const addCategory = async(req,res)=>{
 }
 
 export const getAllCategories = async (req,res)=>{
+    console.log(req.query,'kkkkkkkkk')
     try {
-        const categories = await Category.find().populate('books')
+        const languageFilter = req.query.lang ? { 'books.language': req.query.lang } : {};
+
+        // Use aggregation to filter categories based on books' language
+        const categories = await Category.aggregate([
+            // Lookup the books collection and join it with the categories
+            { $lookup: {
+                from: 'books',
+                localField: 'books',
+                foreignField: '_id',
+                as: 'books'
+            }},
+            // Match categories based on the language filter for books
+            { $match: languageFilter },
+            // Filter out books that do not match the language
+            { $addFields: {
+                books: {
+                    $filter: {
+                        input: "$books",
+                        as: "book",
+                        cond: { $eq: [ "$$book.language", req.query.lang ] }
+                    }
+                }
+            }},
+            // Project the fields you want to include in the result
+            { $project: {
+                name: 1,
+                image: 1,
+                books: 1 // Include the books field
+            }}
+        ]);
         if(!categories)
             return req.status(404).json({message:"No categories found"});
         return res.status(200).json({categories:categories});
