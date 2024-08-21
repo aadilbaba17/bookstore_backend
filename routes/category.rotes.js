@@ -4,6 +4,7 @@ import { addCategory, getAllCategories } from '../controllers/category.controlle
 const router = express.Router()
 
 router.get('/',getAllCategories);
+router.get('/onlycats',getAllCategories);
 router.post('/',addCategory)
 
 export default router

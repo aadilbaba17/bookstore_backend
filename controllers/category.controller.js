@@ -23,45 +23,58 @@ export const addCategory = async(req,res)=>{
     }
 }
 
-export const getAllCategories = async (req,res)=>{
-    console.log(req.query,'kkkkkkkkk')
+export const getAllCategories = async (req, res) => {
     try {
         const languageFilter = req.query.lang ? { 'books.language': req.query.lang } : {};
 
         // Use aggregation to filter categories based on books' language
         const categories = await Category.aggregate([
             // Lookup the books collection and join it with the categories
-            { $lookup: {
-                from: 'books',
-                localField: 'books',
-                foreignField: '_id',
-                as: 'books'
-            }},
-            // Match categories based on the language filter for books
-            { $match: languageFilter },
-            // Filter out books that do not match the language
-            { $addFields: {
-                books: {
-                    $filter: {
-                        input: "$books",
-                        as: "book",
-                        cond: { $eq: [ "$$book.language", req.query.lang ] }
+            {
+                $lookup: {
+                    from: 'books',
+                    localField: 'books',
+                    foreignField: '_id',
+                    as: 'books'
+                }
+            },
+            // Conditionally match categories based on the language filter for books
+            {
+                $addFields: {
+                    books: {
+                        $cond: {
+                            if: { $gt: [ { $size: [ "$books" ] }, 0 ] },
+                            then: {
+                                $filter: {
+                                    input: "$books",
+                                    as: "book",
+                                    cond: languageFilter['books.language'] ? { $eq: [ "$$book.language", req.query.lang ] } : { $ne: [ "$$book.language", null ] }
+                                }
+                            },
+                            else: "$books"
+                        }
                     }
                 }
-            }},
+            },
             // Project the fields you want to include in the result
-            { $project: {
-                name: 1,
-                image: 1,
-                books: 1 // Include the books field
-            }}
+            {
+                $project: {
+                    name: 1,
+                    image: 1,
+                    books: 1 // Include the books field
+                }
+            }
         ]);
-        if(!categories)
-            return req.status(404).json({message:"No categories found"});
-        return res.status(200).json({categories:categories});
+
+        if (categories.length === 0) {
+            return res.status(404).json({ message: "No categories found" });
+        }
+
+        return res.status(200).json({ categories });
         
     } catch (error) {
-        console.log(`error in getAllCategoryController ${error.message}`)
-        return res.status(500).json({error:error.message})
+        console.log(`Error in getAllCategoryController: ${error.message}`);
+        return res.status(500).json({ error: error.message });
     }
 }
+

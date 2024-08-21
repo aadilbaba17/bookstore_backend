@@ -32,7 +32,21 @@ export const getAllBooks = async(req,res)=>{
   
     }
 }
+export const getBooksBasedOnCategory = async(req,res)=>{
+    try {
 
+        const id =req.params.id
+        console.log(id)
+        const books = await Book.find({category:id});
+        if(!books)
+            return res.status(404).json({message:"NO books found"})
+        res.status(200).json({books:books})
+    } catch (error) {
+        console.log(`Error inget books controller : ${error.message}`)
+    return res.status(500).json({error:"Internal server error"})
+  
+    }
+}
 export const getPrefferedBooks = async (req,res)=>{
   
     try {
