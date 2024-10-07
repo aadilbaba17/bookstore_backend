@@ -42,7 +42,20 @@ const userSchema = new mongoose.Schema({
         {type:mongoose.Schema.Types.ObjectId,
             ref:"Book",
             default:[]
-        }]    
+        }],
+        bookmarks: [ // New field for bookmarks
+            {
+                bookId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Book",
+                    required: true
+                },
+                pageNumber: {
+                    type: Number,
+                    required: true
+                }
+            }
+        ]  
 
 });
 const User = mongoose.model('User',userSchema);

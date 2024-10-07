@@ -12,6 +12,7 @@ try {
     }
     const user = await User.findById(decoded.userId).select("-password");
     if(!user){
+      console.log("$$$$$$$$$")
       return  res.status(404).json({error:"user not found"})
     }
     req.user = user;

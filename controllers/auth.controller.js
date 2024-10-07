@@ -71,3 +71,38 @@ export const logout= (req,res) => {
     }
 
 }
+
+export const googleSignIn = async (req, res) => {
+    try {
+      const { email, fullName, profilePic } = req.body; // Extract the necessary user data
+  
+      // Check if the user already exists
+      let user = await User.findOne({ email });
+  
+      if (!user) {
+        // Create a new user if they don't exist
+        const newUser = new User({
+          email,
+          fullName,
+          username: email.split('@')[0], // Create a username from email
+          profilePic,
+          // You can set a default password or leave it undefined
+          password: "google", // Google users usually don't have passwords
+        });
+  
+        await newUser.save();
+        user = newUser; // Set user to the newly created user
+      }
+  
+      // Generate token and set it as a cookie
+      const token = generateTokenAndSetCookie(user._id, res);
+  
+      res.status(200).json({
+        token,
+        user,
+      });
+    } catch (error) {
+      console.log(`Error in Google Sign-In controller: ${error.message}`);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };

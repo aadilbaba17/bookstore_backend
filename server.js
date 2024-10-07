@@ -7,6 +7,7 @@ import authRouter from './routes/auth.routes.js'
 import categoryRouter from './routes/category.rotes.js'
 import prefCatRouter from './routes/user.routes.js'
 import bookRouter from './routes/book.routes.js'
+import { apiLogger } from './middlewares/apiLogger.js';
 
 dotenv.config()
 const app = express();
@@ -15,6 +16,7 @@ app.use(cookieParser());
 const PORT = process.env.PORT || 5000
 //  mongoose.connect(process.env.MONGO_DB_URI, {  })
 app.use(express.json());
+app.use(apiLogger)
 
 app.use('/api/auth',authRouter)
 app.use('/api/categories', categoryRouter)
